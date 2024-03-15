@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-api-spring-boot
+spec:
+  replicas: 3
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: microservice-api-spring-boot
+      branch: main
+  template:
+    metadata:
+      labels:
+        app: microservice-api-spring-boot
+        branch: main
+    spec:
+      containers:
+        - image: ghcr.io/jonashackt/microservice-api-spring-boot@sha256:065c45c56d589562bd35fecefaa31e1c8024c2856bf157567222cbf7e154ab3c
+          name: microservice-api-spring-boot
+          ports:
+            - containerPort: 8098
