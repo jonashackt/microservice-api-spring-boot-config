@@ -11,7 +11,7 @@ Configuring the Deployment, Service and IngressRoute to use a branch like `great
 ```
 RULE_HOST_BRANCHNAME=great-feature-branch
 
-cat > ./ingressroute-patch.yml <<EOF
+cat > ./ingressroute-patch.yaml <<EOF
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -42,7 +42,7 @@ kustomize build .
 
 We have [a EKS cluster running with Traefik deployed in CRD style (full setup on GitHub](https://github.com/jonashackt/tekton-argocd-eks)) and wan't to deploy our app https://gitlab.com/jonashackt/microservice-api-spring-boot with the Kubernetes objects Deployment, Service and IngressRoute (see [configuration repository here](https://gitlab.com/jonashackt/microservice-api-spring-boot-config)). The manifests look like this:
 
-`deployment.yml`:
+`deployment.yaml`:
 
     apiVersion: apps/v1
     kind: Deployment
@@ -69,7 +69,7 @@ We have [a EKS cluster running with Traefik deployed in CRD style (full setup on
           imagePullSecrets:
             - name: gitlab-container-registry
 
-`service.yml`:
+`service.yaml`:
 
     apiVersion: v1
     kind: Service
@@ -83,7 +83,7 @@ We have [a EKS cluster running with Traefik deployed in CRD style (full setup on
         app: microservice-api-spring-boot
         branch: main
 
-`traefik-ingress-route.yml`:
+`traefik-ingress-route.yaml`:
 
     apiVersion: traefik.containo.us/v1alpha1
     kind: IngressRoute
@@ -102,10 +102,10 @@ We have [a EKS cluster running with Traefik deployed in CRD style (full setup on
 
 We already use [Kustomize](https://kustomize.io/) and especially the `kustomize` CLI (on a Mac or in GitHub Actions install with `brew install kustomize`) with the following folder structure:
 
-    ├── deployment.yml
+    ├── deployment.yaml
     ├── kustomization.yaml
-    ├── service.yml
-    └── traefik-ingress-route.yml
+    ├── service.yaml
+    └── traefik-ingress-route.yaml
 
 Our `kustomization.yaml` looks like this:
 
@@ -113,9 +113,9 @@ Our `kustomization.yaml` looks like this:
     kind: Kustomization
     
     resources:
-    - deployment.yml
-    - service.yml
-    - traefik-ingress-route.yml
+    - deployment.yaml
+    - service.yaml
+    - traefik-ingress-route.yaml
     
     images:
     - name: registry.gitlab.com/jonashackt/microservice-api-spring-boot
@@ -154,9 +154,9 @@ Changing the `IngressRoute`s `.spec.routes[0].services[0].name` is possible with
     configurations:
       # Tie target Service metadata.name to IngressRoute's spec.routes.services.name
       # Once Service name is changed, the IngressRoute referrerd service name will be changed as well.
-      - nameReference.yml
+      - nameReference.yaml
 
-We also need to add file called `nameReference.yml`:
+We also need to add file called `nameReference.yaml`:
 
     nameReference:
       - kind: Service
@@ -174,15 +174,15 @@ will not only change the `metadata.name` tags of the Deployment, Service and Ing
 **2. Change a part of the IngressRoutes `.spec.routes[0].match = Host()**
 ---------------------------------------------------------------------
 
-The second part of the question ask how to change a part of the IngressRoutes `.spec.routes[0].match = Host()`. There's [an open issue in the Kustomize GitHub project](https://github.com/kubernetes-sigs/kustomize/issues/4012). Right now Kustomize doesn't support this use case - only writing a custom generator plugin for Kustomize. As this might not be a preferred option, there's another way inspired by [this blog post](https://traefik.io/blog/deploy-traefik-proxy-using-flux-and-gitops/). As we can create yaml files inline in our console using the syntax `cat > ./myyamlfile.yml <<EOF ... EOF` we could also use the inline variable substitution.
+The second part of the question ask how to change a part of the IngressRoutes `.spec.routes[0].match = Host()`. There's [an open issue in the Kustomize GitHub project](https://github.com/kubernetes-sigs/kustomize/issues/4012). Right now Kustomize doesn't support this use case - only writing a custom generator plugin for Kustomize. As this might not be a preferred option, there's another way inspired by [this blog post](https://traefik.io/blog/deploy-traefik-proxy-using-flux-and-gitops/). As we can create yaml files inline in our console using the syntax `cat > ./myyamlfile.yaml <<EOF ... EOF` we could also use the inline variable substitution.
 
 So first define the branch name as variable:
 
     RULE_HOST_BRANCHNAME=foobar
 
-And then use the described syntax to create a `ingressroute-patch.yml` file inline:
+And then use the described syntax to create a `ingressroute-patch.yaml` file inline:
 
-    cat > ./ingressroute-patch.yml <<EOF
+    cat > ./ingressroute-patch.yaml <<EOF
     apiVersion: traefik.containo.us/v1alpha1
     kind: IngressRoute
     metadata:
@@ -200,10 +200,10 @@ And then use the described syntax to create a `ingressroute-patch.yml` file inli
     
     EOF
 
-The last step is to use the `ingressroute-patch.yml` file as `patchesStrategicMerge` inside our `kustomization.yaml` like this:
+The last step is to use the `ingressroute-patch.yaml` file as `patchesStrategicMerge` inside our `kustomization.yaml` like this:
 
     patchesStrategicMerge:
-      - ingressroute-patch.yml
+      - ingressroute-patch.yaml
 
 Now running `kustomize build .` should output the correct Deployment, Service and IngressRoute for our setup:
 
